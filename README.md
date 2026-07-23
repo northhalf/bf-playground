@@ -7,7 +7,7 @@
 
 <h1>bf_playground</h1>
 
-![Status](https://img.shields.io/badge/status-active-brightgreen) ![CI](https://github.com/northhalf/bf-playground/actions/workflows/deploy.yml/badge.svg) ![Release](https://img.shields.io/github/v/release/northhalf/bf-playground) ![Downloads](https://img.shields.io/github/downloads/northhalf/bf-playground/total)
+![Status](https://img.shields.io/badge/status-active-brightgreen) ![CI](https://github.com/northhalf/bf-playground/actions/workflows/deploy.yml/badge.svg) ![Release](https://img.shields.io/github/v/release/northhalf/bf-playground) ![Downloads](https://img.shields.io/github/downloads/northhalf/bf-playground/total) ![License](https://img.shields.io/badge/license-MIT-blue)
 
 <p align="center">English | <a href="./README_zh.md">中文</a></p>
 
