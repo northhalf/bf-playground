@@ -8,8 +8,48 @@ import 'package:flutter/material.dart';
 /// Display symbols of the 8 Brainfuck instructions, in enum order.
 const kInstructionSymbols = ['>', '<', '+', '-', '.', ',', '[', ']'];
 
-/// A [TextEditingController] that highlights the source character of the
-/// instruction at the current program counter.
+// Syntax-highlight palette (design spec section 5.5), tuned for the
+// single light theme on the cream scaffold background.
+const _pointerColor = Color(0xFF303F9F); // indigo 700
+const _arithmeticColor = Color(0xFFD84315); // deepOrange 700
+const _ioColor = Color(0xFF00796B); // teal 700
+const _commentColor = Color(0xFF757575); // grey 600
+const _bracketCycle = [
+  Color(0xFF7B1FA2), // purple 700
+  Color(0xFFC2185B), // pink 700
+  Color(0xFF5D4037), // brown 700
+];
+
+/// Returns the lexical syntax-highlight color of each UTF-16 unit of
+/// [text] (design spec section 5.5).
+///
+/// Purely lexical, no parsing: `>`/`<` indigo, `+`/`-` deepOrange,
+/// `.`/`,` teal, everything else grey. Brackets are colored by nesting
+/// depth cycling through purple/pink/brown: `[` takes the current depth
+/// color and increments, `]` decrements (clamped at 0) and takes that
+/// color, so a balanced pair always matches.
+List<Color> _syntaxColors(String text) {
+  final colors = <Color>[];
+  var depth = 0;
+  for (var i = 0; i < text.length; i++) {
+    colors.add(
+      switch (text[i]) {
+        '>' || '<' => _pointerColor,
+        '+' || '-' => _arithmeticColor,
+        '.' || ',' => _ioColor,
+        '[' => _bracketCycle[depth++ % _bracketCycle.length],
+        ']' =>
+          _bracketCycle[(depth = depth > 0 ? depth - 1 : 0) %
+              _bracketCycle.length],
+        _ => _commentColor,
+      },
+    );
+  }
+  return colors;
+}
+
+/// A [TextEditingController] that syntax-colors the source and highlights
+/// the source character of the instruction at the current program counter.
 final class CodeTextController extends TextEditingController {
   /// Creates a controller bound to the given [VmController].
   CodeTextController(this._vm);
@@ -23,27 +63,39 @@ final class CodeTextController extends TextEditingController {
     TextStyle? style,
   }) {
     final text = value.text;
+    final base = style ?? const TextStyle();
+    if (text.isEmpty) return TextSpan(style: base, text: text);
+
+    final colors = _syntaxColors(text);
     final offsets = _vm.program?.sourceOffsets;
     final pc = _vm.pc;
-    final plain = TextSpan(style: style, text: text);
-    if (offsets == null || pc >= offsets.length) return plain;
-    final start = offsets[pc];
-    if (start >= text.length) return plain;
-    final base = style ?? const TextStyle();
-    return TextSpan(
-      style: base,
-      children: [
-        TextSpan(text: text.substring(0, start)),
-        TextSpan(
-          text: text.substring(start, start + 1),
-          style: base.copyWith(
-            backgroundColor: Colors.amber,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        TextSpan(text: text.substring(start + 1)),
-      ],
-    );
+    final pcOffset =
+        offsets != null && pc < offsets.length && offsets[pc] < text.length
+        ? offsets[pc]
+        : null;
+
+    TextStyle styleAt(int i) {
+      final syntax = base.copyWith(color: colors[i]);
+      return i == pcOffset
+          ? syntax.copyWith(
+              backgroundColor: Colors.amber,
+              fontWeight: FontWeight.bold,
+            )
+          : syntax;
+    }
+
+    // Merge adjacent characters sharing a style into single spans.
+    final children = <TextSpan>[];
+    var start = 0;
+    for (var i = 1; i <= text.length; i++) {
+      if (i == text.length || styleAt(i) != styleAt(start)) {
+        children.add(
+          TextSpan(text: text.substring(start, i), style: styleAt(start)),
+        );
+        start = i;
+      }
+    }
+    return TextSpan(style: base, children: children);
   }
 }
 
@@ -103,6 +155,11 @@ final class _InstructionStrip extends StatelessWidget {
     if (program == null || program.length == 0) {
       return const SizedBox(height: 24);
     }
+    final symbols = [
+      for (var i = 0; i < program.length; i++)
+        kInstructionSymbols[program.instructions[i].index],
+    ];
+    final colors = _syntaxColors(symbols.join());
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Text.rich(
@@ -111,13 +168,15 @@ final class _InstructionStrip extends StatelessWidget {
             const TextSpan(text: 'Instructions: ', style: mono),
             for (var i = 0; i < program.length; i++)
               TextSpan(
-                text: '${kInstructionSymbols[program.instructions[i].index]} ',
-                style: i == vm.pc
-                    ? mono.copyWith(
-                        backgroundColor: Colors.amber,
-                        fontWeight: FontWeight.bold,
-                      )
-                    : mono,
+                text: '${symbols[i]} ',
+                style:
+                    (i == vm.pc
+                            ? mono.copyWith(
+                                backgroundColor: Colors.amber,
+                                fontWeight: FontWeight.bold,
+                              )
+                            : mono)
+                        .copyWith(color: colors[i]),
               ),
           ],
         ),

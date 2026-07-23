@@ -34,7 +34,7 @@ Runs in the browser, and as Windows, macOS and Android packages.
 
 - **Live preview** — operators appended at the end of the code box execute instantly with step animation; an unclosed `[` enters a pending state until the matching `]` arrives
 - **Calculator-style keypad** for the 8 Brainfuck instructions
-- **Code view** — the current instruction is highlighted both in the editor and in the instruction strip below it
+- **Code view** — hand-rolled syntax highlighting: instructions colored by category (pointer / arithmetic / I/O), nested brackets rainbow-colored by depth, comments greyed out; the current instruction is highlighted both in the editor and in the instruction strip below it
 - **Tape grid** — cells wrap onto rows joined by connector lines, the view follows the pointer, and cells flash on value changes
 - **Preset input / live output** — when input runs out, execution pauses with a hint and resumes after you feed more
 - **Playback controls** — step, play/pause, reset, and an adjustable steps-per-second speed
