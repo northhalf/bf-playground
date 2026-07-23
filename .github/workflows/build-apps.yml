@@ -1,0 +1,80 @@
+name: Build desktop & mobile apps
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    environment:
+      name: deploy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - run: Compress-Archive -Path build/windows/x64/runner/Release -DestinationPath bf_playground-windows.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bf_playground-windows
+          path: bf_playground-windows.zip
+
+  macos:
+    runs-on: macos-latest
+    environment:
+      name: deploy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build macos --release
+      # Zip the .app first: bare bundles lose their symlinks in artifacts.
+      - run: ditto -c -k --sequesterRsrc --keepParent build/macos/Build/Products/Release/bf_playground.app bf_playground-macos.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bf_playground-macos
+          path: bf_playground-macos.zip
+
+  android:
+    runs-on: ubuntu-latest
+    environment:
+      name: deploy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - run: cp build/app/outputs/flutter-apk/app-release.apk bf_playground-android.apk
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bf_playground-android
+          path: bf_playground-android.apk
+
+  release:
+    # Only tag pushes cut a release; manual runs just produce artifacts.
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [windows, macos, android]
+    runs-on: ubuntu-latest
+    environment:
+      name: deploy
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: bf_playground-*
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: dist/bf_playground-*
+          generate_release_notes: true
