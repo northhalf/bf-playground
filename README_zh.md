@@ -19,6 +19,17 @@
 
 </div>
 
+## 演示
+
+<p align="center">
+  <img src="assets/demo.webp" alt="桌面布局:Hello World 程序在纸带网格上实时预览" width="800"><br>
+  <em>桌面端:Hello World 程序执行中——代码框内高亮当前指令,纸带网格换行排布并跟随指针。</em>
+</p>
+<p align="center">
+  <img src="assets/demo-mobile.webp" alt="手机竖屏布局:纸带在上,输入面板在下" width="280"><br>
+  <em>手机端:同一会话的竖排布局——纸带网格在上,按键、控制与代码框在下。</em>
+</p>
+
 ## 特性
 
 - **实时预览** —— 在代码框末尾追加的运算符会立即带动画逐条执行;未闭合的 `[` 进入 pending 状态,等 `]` 配平后续跑

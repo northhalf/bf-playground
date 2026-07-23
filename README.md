@@ -19,6 +19,17 @@ Runs in the browser, and as Windows, macOS and Android packages.
 
 </div>
 
+## Demo
+
+<p align="center">
+  <img src="assets/demo.webp" alt="Desktop layout: a Hello World program live-previewing on the tape grid" width="800"><br>
+  <em>Desktop — a Hello World program mid-run: the current instruction is highlighted in the code box, and the tape grid wraps onto rows while following the pointer.</em>
+</p>
+<p align="center">
+  <img src="assets/demo-mobile.webp" alt="Mobile layout: tape on top, input panel below" width="280"><br>
+  <em>Phone — the same session in the vertical layout: tape grid on top, keypad, controls and code box below.</em>
+</p>
+
 ## Features
 
 - **Live preview** — operators appended at the end of the code box execute instantly with step animation; an unclosed `[` enters a pending state until the matching `]` arrives
