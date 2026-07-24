@@ -83,4 +83,24 @@ void main() {
     );
     expect(find.byType(SnackBar), findsNothing);
   });
+
+  testWidgets('the speed box applies values beyond the slider range', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MainApp());
+    final field = find.byType(TextFormField);
+    expect(field, findsOneWidget);
+    expect(tester.widget<TextFormField>(field).initialValue, '5');
+
+    await tester.enterText(field, '500');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+
+    // No Slider out-of-range assertion, and the field shows the new speed.
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.widget<TextFormField>(find.byType(TextFormField)).initialValue,
+      '500',
+    );
+  });
 }

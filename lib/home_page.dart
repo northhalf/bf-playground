@@ -5,6 +5,7 @@ import 'package:bf_playground/code_panel.dart';
 import 'package:bf_playground/tape_panel.dart';
 import 'package:bf_playground/vm_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// The playground home page: keypad, controls, code panel and IO boxes
 /// on the left; the tape grid on the right.
@@ -197,12 +198,33 @@ final class _HomePageState extends State<HomePage> {
         SizedBox(
           width: 160,
           child: Slider(
-            value: _vm.speed.toDouble(),
-            min: 1,
-            max: 20,
-            divisions: 19,
+            value: _vm.speed
+                .clamp(VmController.minSpeed, VmController.sliderMaxSpeed)
+                .toDouble(),
+            min: VmController.minSpeed.toDouble(),
+            max: VmController.sliderMaxSpeed.toDouble(),
+            divisions: VmController.sliderMaxSpeed - VmController.minSpeed,
             label: '${_vm.speed} steps/s',
             onChanged: (v) => _vm.speed = v.round(),
+          ),
+        ),
+        SizedBox(
+          width: 110,
+          child: TextFormField(
+            // Rebuilds with the latest speed when the slider moves.
+            key: ValueKey(_vm.speed),
+            initialValue: '${_vm.speed}',
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              isDense: true,
+              border: OutlineInputBorder(),
+              suffixText: 'steps/s',
+            ),
+            onFieldSubmitted: (v) {
+              final parsed = int.tryParse(v);
+              if (parsed != null) _vm.speed = parsed;
+            },
           ),
         ),
       ],

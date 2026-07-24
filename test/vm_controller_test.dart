@@ -309,8 +309,23 @@ void main() {
     test('speed is clamped to the supported range', () {
       final vm = VmController()..speed = 0;
       expect(vm.speed, VmController.minSpeed);
-      vm.speed = 100;
+      vm.speed = VmController.maxSpeed + 1;
       expect(vm.speed, VmController.maxSpeed);
+    });
+
+    testWidgets('speeds above 60 run several steps per timer tick', (
+      tester,
+    ) async {
+      final vm = VmController()
+        ..speed = 600
+        ..onSourceChanged('+' * 100);
+      expect(vm.stepCount, 1); // first step runs synchronously
+      await tester.pump(const Duration(milliseconds: 17)); // one 16ms tick
+      expect(vm.stepCount, 11); // 1 + ceil(600/60) steps per tick
+      await tester.pump(const Duration(seconds: 2));
+      expect(vm.isHalted, isTrue);
+      expect(vm.tape[0], 100);
+      vm.dispose();
     });
 
     test('reset restarts the input queue from the beginning', () {

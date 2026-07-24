@@ -70,8 +70,19 @@ final class VmController extends ChangeNotifier {
   /// The slowest play speed, in steps per second.
   static const int minSpeed = 1;
 
-  /// The fastest play speed, in steps per second.
-  static const int maxSpeed = 60;
+  /// The fastest play speed accepted from the speed input box, in steps
+  /// per second.
+  static const int maxSpeed = 1000;
+
+  /// The fastest speed selectable on the slider, in steps per second.
+  static const int sliderMaxSpeed = 50;
+
+  /// Timer ticks per second at high speeds.
+  ///
+  /// Above this rate each tick runs several steps instead of shortening
+  /// the tick interval: browsers clamp sub-4ms periodic timers, so one
+  /// step per tick would under-deliver the requested speed.
+  static const int _maxTicksPerSecond = 60;
 
   final BfAppIO _io = BfAppIO();
 
@@ -347,8 +358,17 @@ final class VmController extends ChangeNotifier {
 
   void _startTimer() {
     _timer?.cancel();
-    _timer = Timer.periodic(Duration(milliseconds: 1000 ~/ _speed), (_) {
-      if (!_tryStep() || _stepper!.isHalted) _stopTimer();
+    final stepsPerTick = (_speed / _maxTicksPerSecond).ceil();
+    final ticksPerSecond = (_speed / stepsPerTick).ceil();
+    _timer = Timer.periodic(Duration(milliseconds: 1000 ~/ ticksPerSecond), (
+      _,
+    ) {
+      for (var i = 0; i < stepsPerTick; i++) {
+        if (!_tryStep() || _stepper!.isHalted) {
+          _stopTimer();
+          break;
+        }
+      }
       notifyListeners();
     });
   }
