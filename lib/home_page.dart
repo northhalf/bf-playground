@@ -209,7 +209,7 @@ final class _HomePageState extends State<HomePage> {
           ),
         ),
         SizedBox(
-          width: 110,
+          width: 150,
           child: TextFormField(
             // Rebuilds with the latest speed when the slider moves.
             key: ValueKey(_vm.speed),
